@@ -47,7 +47,7 @@ pub fn get_latest_transaction_for_agent(
         None => Ok(None),
         Some((_seq, hash)) => {
             let record = get(hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
-                WasmErrorInner::Guest("Couldn't get latest transaction".to_string()),
+                "Couldn't get latest transaction",
             ))?;
 
             let entry = record
@@ -65,9 +65,6 @@ pub fn get_latest_transaction_for_agent(
 }
 
 pub(crate) fn transaction_entry_type() -> ExternResult<EntryType> {
-    Ok(EntryType::App(AppEntryType::new(
-        entry_def_index!(Transaction)?,
-        zome_info()?.id,
-        EntryVisibility::Public,
-    )))
+    let app_entry = AppEntryDef::new(0.into(), 0.into(), EntryVisibility::Public);
+    Ok(EntryType::App(app_entry))
 }

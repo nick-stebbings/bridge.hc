@@ -1,4 +1,4 @@
-use transactions_and_requests_integrity::Transaction;
+use bridge_hc_types::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -7,10 +7,10 @@ use crate::get_transactions_activity;
 pub fn _check_preflight_response(preflight_response: PreflightResponse) -> ExternResult<()> {
     let preflight_request = preflight_response.request();
     let bytes = SerializedBytes::from(UnsafeBytes::from(
-        preflight_request.preflight_bytes().0.clone(),
+        preflight_request.preflight_bytes.0.clone(),
     ));
 
-    let transaction = Transaction::try_from(bytes)?;
+    let transaction = Transaction::try_from(bytes).map_err(|e| wasm_error!(e))?;
 
     let author = _get_author(&preflight_response)?;
 
@@ -20,7 +20,7 @@ pub fn _check_preflight_response(preflight_response: PreflightResponse) -> Exter
 
     _check_transaction_is_the_latest(
         author,
-        party.previous_transaction_hash.map(|h| HeaderHash::from(h)),
+        party.previous_transaction_hash.map(|h| ActionHash::from(h)),
         chain_top.clone(),
     )?;
 
@@ -29,8 +29,8 @@ pub fn _check_preflight_response(preflight_response: PreflightResponse) -> Exter
 
 pub fn _check_transaction_is_the_latest(
     agent_pub_key: AgentPubKey,
-    transaction_hash: Option<HeaderHash>,
-    highest_observed: HeaderHash,
+    transaction_hash: Option<ActionHash>,
+    highest_observed: ActionHash,
 ) -> ExternResult<()> {
     let activity: AgentActivity = get_transactions_activity(agent_pub_key.into())?;
 
@@ -70,7 +70,7 @@ pub fn _get_author(preflight_response: &PreflightResponse) -> ExternResult<Agent
     let author_index = preflight_response.agent_state().agent_index().clone() as usize;
     let author = preflight_response
         .request()
-        .signing_agents()
+        .signing_agents
         .get(author_index)
         .ok_or(wasm_error!(String::from(
             "Malformed preflight response",

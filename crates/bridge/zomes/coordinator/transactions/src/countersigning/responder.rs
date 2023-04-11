@@ -1,4 +1,4 @@
-use transactions_and_requests_integrity::Transaction;
+use bridge_hc_types::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -19,7 +19,7 @@ pub fn transaction_preflight(input: TransactionPreflight) -> ExternResult<Prefli
         match accept_countersigning_preflight_request(input.preflight_request.clone())? {
             PreflightRequestAcceptance::Accepted(response) => Ok(response),
             _ => Err(wasm_error!(
-                "There was an error accepting the preflight request for the transaction".into(),
+                "There was an error accepting the preflight request for the transaction",
             )),
         }?;
 
@@ -32,24 +32,24 @@ pub fn request_create_transaction(
 ) -> ExternResult<ActionHashB64> {
     let preflight_request = all_responses[0].request().clone();
     let bytes = SerializedBytes::from(UnsafeBytes::from(
-        preflight_request.preflight_bytes().0.clone(),
+        preflight_request.preflight_bytes.0.clone(),
     ));
 
-    let transaction = Transaction::try_from(bytes)?;
+    let transaction = Transaction::try_from(bytes).map_err(|e| wasm_error!(e))?;
 
     let action_hash = create_transaction(transaction.clone(), all_responses)?;
 
     Ok(action_hash)
 }
 
-fn check_is_top_of_the_chain(chain_top: HeaderHash) -> ExternResult<()> {
+fn check_is_top_of_the_chain(chain_top: ActionHash) -> ExternResult<()> {
     let elements = query(ChainQueryFilter::new())?;
 
     let last_element = elements
         .last()
         .ok_or(wasm_error!(String::from("Chain is empty!")))?;
 
-    if !HeaderHash::from(chain_top).eq(last_element.action_address()) {
+    if !ActionHash::from(chain_top).eq(last_element.action_address()) {
         return Err(wasm_error!(String::from("Moved chain")));
     }
 

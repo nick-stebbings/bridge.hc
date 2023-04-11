@@ -1,4 +1,4 @@
-use transactions_and_requests_integrity::{AttemptCreateTransactionInput, Transaction};
+use bridge_hc_types::{AttemptCreateTransactionInput, Transaction};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -41,7 +41,7 @@ pub fn attempt_create_transaction(
         ))),
     }?;
 
-    let counterparty_response: PreflightResponse = result.decode()?;
+    let counterparty_response: PreflightResponse = result.decode().map_err(|e| wasm_error!(e))?;
 
     let my_response = match accept_countersigning_preflight_request(preflight_request)? {
         PreflightRequestAcceptance::Accepted(response) => Ok(response),
@@ -66,7 +66,7 @@ pub fn attempt_create_transaction(
         ))),
     }?;
 
-    let _counterparty_action_hash: ActionHashB64 = result.decode()?;
+    let _counterparty_action_hash: ActionHashB64 = result.decode().map_err(|e| wasm_error!(e))?;
 
     let action_hash = create_transaction(
         input.transaction.clone(),
@@ -84,19 +84,21 @@ fn build_preflight_request(
 
     let times = session_times_from_millis(5_000)?;
 
-    let action_base = HeaderBase::Create(CreateBase::new(transaction_entry_type()?));
+    let action_base = ActionBase::Create(CreateBase::new(transaction_entry_type()?));
 
-    let bytes = SerializedBytes::try_from(transaction.clone())?;
+    let bytes = SerializedBytes::try_from(transaction.clone()).map_err(|e| wasm_error!(e))?;
 
     let preflight_bytes = PreflightBytes(bytes.bytes().to_vec());
 
     let preflight_request = PreflightRequest::try_new(
         transaction_hash,
         countersigning_agents,
-        None,
+        vec![],
+        0,
+        false,
         times,
         action_base,
-        preflight_bytes,
+        preflight_bytes
     )
     .map_err(|err| wasm_error!(format!("Could not create preflight request: {:?}", err)))?;
 

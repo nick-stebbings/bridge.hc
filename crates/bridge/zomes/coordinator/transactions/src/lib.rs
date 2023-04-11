@@ -9,36 +9,41 @@ mod utils;
 pub use handlers::*;
 pub use utils::*;
 
-entry_defs![Transaction::entry_def()];
+#[derive(Serialize, Deserialize)]
+#[hdk_entry_defs]
+#[unit_enum(UnitEntryTypes)]
+pub enum EntryTypes {
+    Transaction(Transaction)
+}
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
-    let mut functions = GrantedFunctions::new();
-    functions.insert((zome_info()?.name, "recv_remote_signal".into()));
+    let mut functions : BTreeSet<(ZomeName, FunctionName)> = BTreeSet::new();
+    functions.insert((zome_info()?.name.into(), FunctionName("recv_remote_signal".into())));
 
-    let grant = ZomeCallCapGrant {
+    let grant = CapGrantEntry {
+        functions: GrantedFunctions::Listed(functions),
         access: CapAccess::Unrestricted,
-        functions,
         tag: "".into(),
     };
     create_cap_grant(grant)?;
 
-    let mut functions = GrantedFunctions::new();
-    functions.insert((zome_info()?.name, "transaction_preflight".into()));
+    let mut functions : BTreeSet<(ZomeName, FunctionName)> = BTreeSet::new();
+    functions.insert((zome_info()?.name.into(), FunctionName("transaction_preflight".into())));
 
-    let grant = ZomeCallCapGrant {
+    let grant = CapGrantEntry {
+        functions: GrantedFunctions::Listed(functions),
         access: CapAccess::Unrestricted,
-        functions,
         tag: "".into(),
     };
     create_cap_grant(grant)?;
 
-    let mut functions = GrantedFunctions::new();
-    functions.insert((zome_info()?.name, "request_create_transaction".into()));
+    let mut functions : BTreeSet<(ZomeName, FunctionName)> = BTreeSet::new();
+    functions.insert((zome_info()?.name.into(), FunctionName("request_create_transaction".into())));
 
-    let grant = ZomeCallCapGrant {
+    let grant = CapGrantEntry {
+        functions: GrantedFunctions::Listed(functions),
         access: CapAccess::Unrestricted,
-        functions,
         tag: "".into(),
     };
     create_cap_grant(grant)?;

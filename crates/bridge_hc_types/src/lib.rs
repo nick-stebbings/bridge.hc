@@ -62,6 +62,7 @@ impl fmt::Display for TransactionRequestType {
 
 
 #[hdk_entry_helper]
+#[derive(Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Transaction {
     pub spender: TransactionParty,
