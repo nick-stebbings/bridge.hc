@@ -1,12 +1,12 @@
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
-use hc_zome_transactions_integrity::Transaction;
+use bridge_hc_types::Transaction;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum SignalType {
     NewTransactionCreated {
-        transaction_hash: HeaderHashB64,
+        transaction_hash: ActionHashB64,
         transaction: Transaction,
     },
 }

@@ -1,4 +1,4 @@
-use hc_zome_transactions_integrity::Transaction;
+use bridge_hc_types::Transaction;
 use hdk::prelude::*;
 
 mod handlers;

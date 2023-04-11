@@ -1,4 +1,4 @@
-use hc_zome_transactions_integrity::{AttemptCreateTransactionInput, Transaction};
+use transactions_and_requests_integrity::{AttemptCreateTransactionInput, Transaction};
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -10,7 +10,7 @@ use super::responder::TransactionPreflight;
 #[hdk_extern]
 pub fn attempt_create_transaction(
     input: AttemptCreateTransactionInput,
-) -> ExternResult<(HeaderHashB64, Transaction)> {
+) -> ExternResult<(ActionHashB64, Transaction)> {
     let counterparty = input.transaction.get_counterparty()?.agent_pub_key;
 
     let my_pub_key = agent_info()?.agent_initial_pubkey;
@@ -35,7 +35,7 @@ pub fn attempt_create_transaction(
 
     let result = match response.clone() {
         ZomeCallResponse::Ok(result) => Ok(result),
-        _ => Err(WasmError::Guest(format!(
+        _ => Err(wasm_error!(format!(
             "Error with fn transaction_preflight: {:?}",
             response
         ))),
@@ -45,7 +45,7 @@ pub fn attempt_create_transaction(
 
     let my_response = match accept_countersigning_preflight_request(preflight_request)? {
         PreflightRequestAcceptance::Accepted(response) => Ok(response),
-        _ => Err(WasmError::Guest(String::from(
+        _ => Err(wasm_error!(String::from(
             "Couldn't lock our own chain",
         ))),
     }?;
@@ -60,20 +60,20 @@ pub fn attempt_create_transaction(
 
     let result = match response {
         ZomeCallResponse::Ok(result) => Ok(result),
-        _ => Err(WasmError::Guest(format!(
+        _ => Err(wasm_error!(format!(
             "Error with fn request_create_transaction {:?}",
             response
         ))),
     }?;
 
-    let _counterparty_header_hash: HeaderHashB64 = result.decode()?;
+    let _counterparty_action_hash: ActionHashB64 = result.decode()?;
 
-    let header_hash = create_transaction(
+    let action_hash = create_transaction(
         input.transaction.clone(),
         vec![my_response, counterparty_response],
     )?;
 
-    Ok((header_hash.into(), input.transaction))
+    Ok((action_hash.into(), input.transaction))
 }
 
 fn build_preflight_request(
@@ -84,7 +84,7 @@ fn build_preflight_request(
 
     let times = session_times_from_millis(5_000)?;
 
-    let header_base = HeaderBase::Create(CreateBase::new(transaction_entry_type()?));
+    let action_base = HeaderBase::Create(CreateBase::new(transaction_entry_type()?));
 
     let bytes = SerializedBytes::try_from(transaction.clone())?;
 
@@ -95,10 +95,10 @@ fn build_preflight_request(
         countersigning_agents,
         None,
         times,
-        header_base,
+        action_base,
         preflight_bytes,
     )
-    .map_err(|err| WasmError::Guest(format!("Could not create preflight request: {:?}", err)))?;
+    .map_err(|err| wasm_error!(format!("Could not create preflight request: {:?}", err)))?;
 
     Ok(preflight_request)
 }

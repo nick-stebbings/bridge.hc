@@ -1883,6 +1883,7 @@ dependencies = [
 name = "transactions"
 version = "0.0.1"
 dependencies = [
+ "bridge_hc_types",
  "hdk",
  "serde",
  "transactions_and_requests_integrity",

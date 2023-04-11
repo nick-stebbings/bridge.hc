@@ -1,4 +1,4 @@
-use hc_zome_transactions_integrity::Transaction;
+use transactions_and_requests_integrity::Transaction;
 use hdk::prelude::holo_hash::*;
 use hdk::prelude::*;
 
@@ -37,16 +37,16 @@ pub fn _check_transaction_is_the_latest(
     let actual_highest = activity
         .clone()
         .highest_observed
-        .ok_or(WasmError::Guest(String::from("Highest observed is None")))?;
+        .ok_or(wasm_error!(String::from("Highest observed is None")))?;
 
     if actual_highest.hash.len() != 1 {
-        return Err(WasmError::Guest(String::from(
+        return Err(wasm_error!(String::from(
             "More than one header is in the highest observed",
         )));
     }
 
     if !actual_highest.hash[0].eq(&highest_observed) {
-        return Err(WasmError::Guest(String::from("Bad highest observed")));
+        return Err(wasm_error!(String::from("Bad highest observed")));
     }
 
     let valid = match (activity.valid_activity.last(), transaction_hash) {
@@ -58,7 +58,7 @@ pub fn _check_transaction_is_the_latest(
     };
 
     if !valid {
-        return Err(WasmError::Guest(String::from(
+        return Err(wasm_error!(String::from(
             "Transaction is not the latest",
         )));
     }
@@ -72,7 +72,7 @@ pub fn _get_author(preflight_response: &PreflightResponse) -> ExternResult<Agent
         .request()
         .signing_agents()
         .get(author_index)
-        .ok_or(WasmError::Guest(String::from(
+        .ok_or(wasm_error!(String::from(
             "Malformed preflight response",
         )))?
         .0
