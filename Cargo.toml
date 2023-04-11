@@ -18,11 +18,14 @@ path = "crates/bridge/zomes/coordinator/bridge"
 [workspace.dependencies.bridge_integrity]
 path = "crates/bridge/zomes/integrity/bridge"
 
-[workspace.dependencies.transaction_requests]
-path = "crates/bridge/zomes/coordinator/transaction_request"
+[workspace.dependencies.transactions]
+path = "crates/bridge/zomes/coordinator/transactions"
 
-[workspace.dependencies.transaction_requests_integrity]
-path = "crates/bridge/zomes/integrity/transaction_request"
+[workspace.dependencies.transaction_requests]
+path = "crates/bridge/zomes/coordinator/transaction_requests"
+
+[workspace.dependencies.transactions_and_requests_integrity]
+path = "crates/bridge/zomes/integrity/transactions_and_requests"
 
 [workspace.dependencies.profiles]
 path = "crates/bridge/zomes/coordinator/profiles"
